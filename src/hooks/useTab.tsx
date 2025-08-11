@@ -1,4 +1,4 @@
-import type { Tab } from "@component/Editor";
+import type { Tab, TabLanguageType } from "@component/Editor";
 import { generateUniqId } from "@utils";
 import { useCallback, useEffect, useState } from "react";
 
@@ -40,8 +40,13 @@ const useTabs = ({
     (tabId: string) => {
       setTabs((prev) => {
         const newTabs = prev.filter((tab) => tab.id !== tabId);
-        if (activeTab === tabId && newTabs.length > 0) {
-          setActiveTab(newTabs[0].id);
+        // 如果刪除的是當前活動標籤頁，則切換到第一個可用的標籤頁
+        if (activeTab === tabId) {
+          if (newTabs.length > 0) {
+            setActiveTab(newTabs[0].id);
+          } else {
+            setActiveTab(""); // 沒有標籤頁時清空活動標籤頁
+          }
         }
         return newTabs;
       });
@@ -55,11 +60,14 @@ const useTabs = ({
     );
   }, []);
 
-  const updateTabLanguage = useCallback((tabId: string, language: string) => {
-    setTabs((prev) =>
-      prev.map((tab) => (tab.id === tabId ? { ...tab, language } : tab))
-    );
-  }, []);
+  const updateTabLanguage = useCallback(
+    (tabId: string, language: TabLanguageType) => {
+      setTabs((prev) =>
+        prev.map((tab) => (tab.id === tabId ? { ...tab, language } : tab))
+      );
+    },
+    []
+  );
 
   return {
     tabs,

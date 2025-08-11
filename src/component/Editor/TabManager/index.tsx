@@ -1,6 +1,9 @@
-import { useTabs } from "@hooks";
+import useTabs from "@/hooks/useTab";
 import LanguageSelector from "../LanguageSelector";
-import type { TabManagerProps } from "../type";
+import type { Tab as TabType, TabLanguageType, TabManagerProps } from "../type";
+import { TAB_LANGUAGE_CONFIG } from "../const";
+import TabItem from "../TabItem";
+import EditorPanel from "../EditorPanel";
 
 const TabManager = ({ onTabsChange }: TabManagerProps) => {
   const {
@@ -16,7 +19,7 @@ const TabManager = ({ onTabsChange }: TabManagerProps) => {
   const handleAddTab = () => {
     addTab({
       name: `新檔案 ${tabs.length + 1}`,
-      language: "html",
+      language: TAB_LANGUAGE_CONFIG.HTML,
       content: "",
     });
   };
@@ -30,24 +33,45 @@ const TabManager = ({ onTabsChange }: TabManagerProps) => {
     removeTab(tabId);
   };
 
-  const handleLanguageChange = (language: string) => {
+  const handleLanguageChange = (language: TabLanguageType) => {
     if (activeTab) {
       updateTabLanguage(activeTab, language);
     }
   };
 
-  const activeTabData = tabs.find((tab) => tab.id === activeTab);
+  const activeTabData = tabs.find((tab: TabType) => tab.id === activeTab);
+
+  // 處理標籤頁更新
+  const handleTabUpdate = (tabId: string, updates: Partial<TabType>) => {
+    const updatedTabs = tabs.map((tab) =>
+      tab.id === tabId ? { ...tab, ...updates } : tab
+    );
+    onTabsChange(updatedTabs, activeTab);
+  };
 
   return (
     <div className="flex flex-col h-full">
       {/* 標籤頁工具列 */}
-      <div className="flex items-center justify-between bg-gray-800 border-b border-gray-700 px-4 py-2">
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center justify-between bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700/50 px-4 py-3">
+        <div className="flex items-center space-x-3">
           <button
             onClick={handleAddTab}
-            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors"
+            className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg text-sm font-medium transition-all duration-200 ease-out shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2"
           >
-            + 新檔案
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            新檔案
           </button>
         </div>
         {activeTabData && (
@@ -59,71 +83,24 @@ const TabManager = ({ onTabsChange }: TabManagerProps) => {
       </div>
 
       {/* 標籤頁列表 */}
-      <div className="flex bg-gray-900 border-b border-gray-700 overflow-x-auto">
-        {tabs.map((tab) => (
-          <div
+      <div className="flex bg-gradient-to-r from-gray-900 to-gray-950 border-b border-gray-700/50 overflow-x-auto">
+        {tabs.map((tab: TabType) => (
+          <TabItem
             key={tab.id}
-            onClick={() => handleTabClick(tab.id)}
-            className={`
-              flex items-center px-4 py-2 cursor-pointer border-r border-gray-700 min-w-0
-              ${
-                activeTab === tab.id
-                  ? "bg-gray-800 text-white border-b-2 border-b-blue-500"
-                  : "bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-gray-300"
-              }
-            `}
-          >
-            <span className="truncate max-w-32">{tab.name}</span>
-            <button
-              onClick={(e) => handleTabClose(e, tab.id)}
-              className="ml-2 text-gray-500 hover:text-red-400 transition-colors"
-            >
-              ×
-            </button>
-          </div>
+            tab={tab}
+            isActive={activeTab === tab.id}
+            onClick={handleTabClick}
+            onClose={handleTabClose}
+          />
         ))}
       </div>
 
-      {/* 標籤頁內容區域 */}
-      <div className="flex-1 bg-gray-800">
-        {tabs.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            <div className="text-center">
-              <p className="text-lg mb-2">歡迎使用代碼編輯器</p>
-              <p className="text-sm mb-4">點擊「新檔案」開始編寫代碼</p>
-              <button
-                onClick={handleAddTab}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-              >
-                創建第一個檔案
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="h-full">
-            {tabs.map((tab) => (
-              <div
-                key={tab.id}
-                className={`h-full ${
-                  activeTab === tab.id ? "block" : "hidden"
-                }`}
-              >
-                {/* 這裡將放置 MonacoEditor 組件 */}
-                <div className="h-full bg-gray-900 text-gray-300 p-4">
-                  <div className="mb-2 text-sm text-gray-400">
-                    語言: {tab.language}
-                  </div>
-                  <textarea
-                    value={tab.content}
-                    onChange={(e) => updateTabContent(tab.id, e.target.value)}
-                    className="w-full h-full bg-gray-800 text-gray-300 p-4 rounded border border-gray-700 focus:border-blue-500 focus:outline-none resize-none"
-                    placeholder="開始編寫您的代碼..."
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+      {/* 編輯器面板 */}
+      <div className="flex-1 min-h-0">
+        <EditorPanel
+          activeTab={activeTabData || null}
+          onTabUpdate={handleTabUpdate}
+        />
       </div>
     </div>
   );

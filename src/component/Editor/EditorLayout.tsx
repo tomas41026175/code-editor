@@ -1,18 +1,12 @@
 import { useState, useCallback } from "react";
 import TabManager from "@/component/Editor/TabManager";
 import PreviewPane from "@/component/Editor/PreviewPane";
-
-export interface Tab {
-  id: string;
-  name: string;
-  language: string;
-  content: string;
-}
+import type { Tab } from "@/component/Editor/type";
 
 const EditorLayout = () => {
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTab, setActiveTab] = useState<string>("");
-  const [splitRatio, setSplitRatio] = useState(60); // 左側編輯器佔比
+  const [splitRatio, setSplitRatio] = useState(30);
 
   // 從 TabManager 獲取標籤頁數據
   const handleTabsChange = useCallback(
@@ -72,7 +66,7 @@ const EditorLayout = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900">
+    <div className="flex h-screen w-full bg-gray-900 rounded-lg">
       {/* 左側編輯器區域 */}
       <div className="flex flex-col" style={{ width: `${splitRatio}%` }}>
         <TabManager onTabsChange={handleTabsChange} />
