@@ -1,4 +1,4 @@
-export const executeCode = (html: string, css: string, js: string) => {
+const executeCode = (html: string, css: string, js: string) => {
   const combinedCode = `
       <html>
         <head>
@@ -19,3 +19,5 @@ export const executeCode = (html: string, css: string, js: string) => {
 
   return combinedCode;
 };
+
+export default executeCode;
