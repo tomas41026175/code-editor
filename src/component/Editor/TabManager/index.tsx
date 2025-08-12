@@ -14,6 +14,7 @@ const TabManager = ({ onTabsChange }: TabManagerProps) => {
     setActiveTab,
     updateTabContent,
     updateTabLanguage,
+    updateTabName,
   } = useTabs({ onTabsChange });
 
   const handleAddTab = () => {
@@ -43,23 +44,29 @@ const TabManager = ({ onTabsChange }: TabManagerProps) => {
 
   // 處理標籤頁更新
   const handleTabUpdate = (tabId: string, updates: Partial<TabType>) => {
-    const updatedTabs = tabs.map((tab) =>
-      tab.id === tabId ? { ...tab, ...updates } : tab
-    );
-    onTabsChange(updatedTabs, activeTab);
+    // 使用 useTabs 提供的函數來更新狀態
+    if (updates.content !== undefined) {
+      updateTabContent(tabId, updates.content);
+    }
+    if (updates.language !== undefined) {
+      updateTabLanguage(tabId, updates.language);
+    }
+    if (updates.name !== undefined) {
+      updateTabName(tabId, updates.name);
+    }
   };
 
   return (
     <div className="flex flex-col h-full">
       {/* 標籤頁工具列 */}
       <div className="flex items-center justify-between bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700/50 px-4 py-3">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center mt-2 ml-1 flex-shrink-0">
           <button
             onClick={handleAddTab}
-            className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg text-sm font-medium transition-all duration-200 ease-out shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg text-sm font-medium transition-all duration-200 ease-out shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 whitespace-nowrap min-w-fit"
           >
             <svg
-              className="w-4 h-4"
+              className="w-3 h-3 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -71,15 +78,17 @@ const TabManager = ({ onTabsChange }: TabManagerProps) => {
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            新檔案
+            <span className="flex-shrink-0 text-sm">新檔案</span>
           </button>
         </div>
-        {activeTabData && (
-          <LanguageSelector
-            language={activeTabData.language}
-            onLanguageChange={handleLanguageChange}
-          />
-        )}
+        <div className="flex items-center space-x-2 flex-shrink-0">
+          {activeTabData && (
+            <LanguageSelector
+              language={activeTabData.language}
+              onLanguageChange={handleLanguageChange}
+            />
+          )}
+        </div>
       </div>
 
       {/* 標籤頁列表 */}

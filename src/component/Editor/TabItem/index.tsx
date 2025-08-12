@@ -11,7 +11,7 @@ const TabItem = ({ tab, isActive, onClick, onClose }: TabItemProps) => {
   return (
     <div
       className={`
-        flex items-center gap-2 px-3 py-2 cursor-pointer border-r border-gray-700/50
+        flex items-center gap-2 px-3 py-2 cursor-pointer border-r border-gray-700/50 gap-2
         transition-all duration-200 min-w-0
         ${
           isActive

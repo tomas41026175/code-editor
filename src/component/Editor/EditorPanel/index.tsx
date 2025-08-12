@@ -32,13 +32,6 @@ const EditorPanel = ({ activeTab, onTabUpdate }: EditorPanelProps) => {
     }
   }, [localContent, activeTab, onTabUpdate]);
 
-  const handleLanguageChange = (language: TabLanguageType) => {
-    setLocalLanguage(language);
-    if (activeTab) {
-      onTabUpdate(activeTab.id, { language });
-    }
-  };
-
   const handleNameChange = (name: string) => {
     if (activeTab) {
       onTabUpdate(activeTab.id, { name });
@@ -70,26 +63,6 @@ const EditorPanel = ({ activeTab, onTabUpdate }: EditorPanelProps) => {
             className="bg-gray-700 text-white px-3 py-1.5 rounded border border-gray-600 focus:border-blue-500 focus:outline-none text-sm"
             placeholder="檔案名稱"
           />
-
-          {/* 語言選擇器 */}
-          <select
-            value={localLanguage}
-            onChange={(e) =>
-              handleLanguageChange(e.target.value as TabLanguageType)
-            }
-            className="bg-gray-700 text-white px-3 py-1.5 rounded border border-gray-600 focus:border-blue-500 focus:outline-none text-sm"
-          >
-            {Object.entries(TAB_LANGUAGE_CONFIG).map(([key, value]) => (
-              <option key={key} value={value}>
-                {key === "HTML" && "🌐 HTML"}
-                {key === "CSS" && "🎨 CSS"}
-                {key === "JAVASCRIPT" && "⚡ JavaScript"}
-                {key === "TYPESCRIPT" && "🔷 TypeScript"}
-                {key === "JSON" && "📄 JSON"}
-                {key === "MARKDOWN" && "📝 Markdown"}
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* 保存狀態指示器 */}

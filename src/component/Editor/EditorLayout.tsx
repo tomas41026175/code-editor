@@ -22,24 +22,28 @@ const EditorLayout = () => {
 
   // 根據語言類型分離內容
   const getContentByLanguage = () => {
-    if (!activeTabData) return { html: "", css: "", js: "" };
+    if (!activeTabData) return { html: "", css: "", js: "", markdown: "", json: "" };
 
     const { language, content } = activeTabData;
 
     switch (language) {
       case "html":
-        return { html: content, css: "", js: "" };
+        return { html: content, css: "", js: "", markdown: "", json: "" };
       case "css":
-        return { html: "", css: content, js: "" };
+        return { html: "", css: content, js: "", markdown: "", json: "" };
       case "javascript":
       case "typescript":
-        return { html: "", css: "", js: content };
+        return { html: "", css: "", js: content, markdown: "", json: "" };
+      case "markdown":
+        return { html: "", css: "", js: "", markdown: content, json: "" };
+      case "json":
+        return { html: "", css: "", js: "", markdown: "", json: content };
       default:
-        return { html: content, css: "", js: "" };
+        return { html: content, css: "", js: "", markdown: "", json: "" };
     }
   };
 
-  const { html, css, js } = getContentByLanguage();
+  const { html, css, js, markdown, json } = getContentByLanguage();
 
   // 拖拽調整分割比例
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -84,7 +88,7 @@ const EditorLayout = () => {
 
       {/* 右側預覽區域 */}
       <div className="flex flex-col" style={{ width: `${100 - splitRatio}%` }}>
-        <PreviewPane html={html} css={css} js={js} />
+        <PreviewPane html={html} css={css} js={js} markdown={markdown} json={json} />
       </div>
     </div>
   );

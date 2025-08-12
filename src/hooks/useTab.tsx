@@ -1,6 +1,6 @@
 import type { Tab, TabLanguageType } from "@component/Editor";
 import { generateUniqId } from "@utils";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const useTabs = ({
   onTabsChange,
@@ -11,6 +11,10 @@ const useTabs = ({
 }) => {
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTab, setActiveTab] = useState<string>("");
+
+  // 使用 useRef 來存儲 onTabsChange 函數，避免無限循環
+  const onTabsChangeRef = useRef(onTabsChange);
+  onTabsChangeRef.current = onTabsChange;
 
   useEffect(() => {
     if (initialTabList.length > 0) {
@@ -23,9 +27,12 @@ const useTabs = ({
     }
   }, []);
 
+  // 使用 useRef 來避免依賴項問題
   useEffect(() => {
-    onTabsChange(tabs, activeTab);
-  }, [tabs, activeTab, onTabsChange]);
+    if (tabs.length > 0 || activeTab !== "") {
+      onTabsChangeRef.current(tabs, activeTab);
+    }
+  }, [tabs, activeTab]);
 
   const addTab = useCallback((tab: Omit<Tab, "id">) => {
     const newTab = {
@@ -69,6 +76,12 @@ const useTabs = ({
     []
   );
 
+  const updateTabName = useCallback((tabId: string, name: string) => {
+    setTabs((prev) =>
+      prev.map((tab) => (tab.id === tabId ? { ...tab, name } : tab))
+    );
+  }, []);
+
   return {
     tabs,
     activeTab,
@@ -77,6 +90,7 @@ const useTabs = ({
     setActiveTab,
     updateTabContent,
     updateTabLanguage,
+    updateTabName,
   };
 };
 

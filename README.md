@@ -4,9 +4,11 @@
 
 ## 🚀 功能特色
 
-- **多語言支援** - HTML、CSS、JavaScript、TypeScript、JSON 等
+- **多語言支援** - HTML、CSS、JavaScript、TypeScript、JSON、Markdown 等
 - **多標籤頁管理** - 支援多文件同時編輯
 - **實時預覽** - HTML/CSS/JS 代碼即時執行預覽
+- **Markdown 預覽** - 支援 Markdown 語法高亮和即時渲染
+- **JSON 預覽** - 樹狀結構顯示，語法高亮，格式化驗證
 - **代碼高亮** - VS Code 級別的語法高亮
 - **自動完成** - 智能代碼提示和補全
 - **主題切換** - 支援明暗主題切換
