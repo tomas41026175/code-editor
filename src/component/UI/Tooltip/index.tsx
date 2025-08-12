@@ -25,30 +25,33 @@ const Tooltip: React.FC<TooltipProps> = ({
 
   // 計算 tooltip 位置
   const calculatePosition = () => {
-    if (!triggerRef.current || !tooltipRef.current) return;
+    if (!triggerRef.current) return;
 
     const triggerRect = triggerRef.current.getBoundingClientRect();
-    const tooltipRect = tooltipRef.current.getBoundingClientRect();
+
+    // 如果 tooltip 還沒有渲染，使用預估尺寸
+    const tooltipWidth = 200; // 預估 tooltip 寬度
+    const tooltipHeight = 40; // 預估 tooltip 高度
 
     let x = 0;
     let y = 0;
 
     switch (position) {
       case "top":
-        x = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
-        y = triggerRect.top - tooltipRect.height - 8;
+        x = triggerRect.left + triggerRect.width / 2 - tooltipWidth / 2;
+        y = triggerRect.top - tooltipHeight - 8;
         break;
       case "bottom":
-        x = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
+        x = triggerRect.left + triggerRect.width / 2 - tooltipWidth / 2;
         y = triggerRect.bottom + 8;
         break;
       case "left":
-        x = triggerRect.left - tooltipRect.width - 8;
-        y = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
+        x = triggerRect.left - tooltipWidth - 8;
+        y = triggerRect.top + triggerRect.height / 2 - tooltipHeight / 2;
         break;
       case "right":
         x = triggerRect.right + 8;
-        y = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
+        y = triggerRect.top + triggerRect.height / 2 - tooltipHeight / 2;
         break;
     }
 
@@ -58,14 +61,14 @@ const Tooltip: React.FC<TooltipProps> = ({
 
     // 水平邊界檢查
     if (x < 8) x = 8;
-    if (x + tooltipRect.width > viewportWidth - 8) {
-      x = viewportWidth - tooltipRect.width - 8;
+    if (x + tooltipWidth > viewportWidth - 8) {
+      x = viewportWidth - tooltipWidth - 8;
     }
 
     // 垂直邊界檢查
     if (y < 8) y = 8;
-    if (y + tooltipRect.height > viewportHeight - 8) {
-      y = viewportHeight - tooltipRect.height - 8;
+    if (y + tooltipHeight > viewportHeight - 8) {
+      y = viewportHeight - tooltipHeight - 8;
     }
 
     setCoords({ x, y });
@@ -96,17 +99,57 @@ const Tooltip: React.FC<TooltipProps> = ({
     };
   }, []);
 
-  // 重新計算位置當視窗大小改變時
+  // 當 tooltip 顯示後，重新計算精確位置
   useEffect(() => {
-    const handleResize = () => {
-      if (isVisible) {
-        calculatePosition();
-      }
-    };
+    if (isVisible && tooltipRef.current) {
+      const triggerRect = triggerRef.current?.getBoundingClientRect();
+      const tooltipRect = tooltipRef.current.getBoundingClientRect();
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [isVisible]);
+      if (triggerRect) {
+        let x = coords.x;
+        let y = coords.y;
+
+        // 根據實際 tooltip 尺寸調整位置
+        switch (position) {
+          case "top":
+            x =
+              triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
+            y = triggerRect.top - tooltipRect.height - 8;
+            break;
+          case "bottom":
+            x =
+              triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
+            y = triggerRect.bottom + 8;
+            break;
+          case "left":
+            x = triggerRect.left - tooltipRect.width - 8;
+            y =
+              triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
+            break;
+          case "right":
+            x = triggerRect.right + 8;
+            y =
+              triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
+            break;
+        }
+
+        // 邊界檢查
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        if (x < 8) x = 8;
+        if (x + tooltipRect.width > viewportWidth - 8) {
+          x = viewportWidth - tooltipRect.width - 8;
+        }
+        if (y < 8) y = 8;
+        if (y + tooltipRect.height > viewportHeight - 8) {
+          y = viewportHeight - tooltipRect.height - 8;
+        }
+
+        setCoords({ x, y });
+      }
+    }
+  }, [isVisible, position]);
 
   // 箭頭樣式
   const getArrowStyles = () => {
