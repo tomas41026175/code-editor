@@ -23,6 +23,9 @@ const PreviewPane = ({ html, css, js, markdown, json }: PreviewPaneProps) => {
       setPreviewMode("json");
     } else if (html?.trim() || css?.trim() || js?.trim()) {
       setPreviewMode("html");
+    } else {
+      // 當沒有內容時，重置為 html 模式
+      setPreviewMode("html");
     }
   }, [html, css, js, markdown, json]);
 
@@ -163,9 +166,41 @@ const PreviewPane = ({ html, css, js, markdown, json }: PreviewPaneProps) => {
     return String(obj);
   };
 
+  const hasContent =
+    html?.trim() ||
+    css?.trim() ||
+    js?.trim() ||
+    markdown?.trim() ||
+    json?.trim();
+
+  // 調試信息
+  console.log('PreviewPane Debug:', {
+    html: html?.trim() || '',
+    css: css?.trim() || '',
+    js: js?.trim() || '',
+    markdown: markdown?.trim() || '',
+    json: json?.trim() || '',
+    hasContent,
+    previewMode
+  });
+
+  // 當沒有內容時，重置預覽模式
+  useEffect(() => {
+    if (!hasContent) {
+      setPreviewMode("html");
+    }
+  }, [hasContent]);
+
   useEffect(() => {
     if (iframeRef.current) {
       const iframe = iframeRef.current;
+      
+      // 如果沒有內容，清除 iframe
+      if (!hasContent) {
+        iframe.srcdoc = "";
+        return;
+      }
+
       const doc = iframe.contentDocument || iframe.contentWindow?.document;
 
       if (doc) {
@@ -450,14 +485,7 @@ const PreviewPane = ({ html, css, js, markdown, json }: PreviewPaneProps) => {
         iframe.srcdoc = fullHTML;
       }
     }
-  }, [html, css, js, markdown, json, previewMode]);
-
-  const hasContent =
-    html?.trim() ||
-    css?.trim() ||
-    js?.trim() ||
-    markdown?.trim() ||
-    json?.trim();
+  }, [html, css, js, markdown, json, previewMode, hasContent]);
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -470,6 +498,7 @@ const PreviewPane = ({ html, css, js, markdown, json }: PreviewPaneProps) => {
             <span className="text-xs text-gray-500">即時更新</span>
           </div>
         </div>
+
         <div className="flex items-center space-x-2">
           {/* 預覽模式切換 */}
           {hasContent && (
@@ -480,11 +509,11 @@ const PreviewPane = ({ html, css, js, markdown, json }: PreviewPaneProps) => {
                 onChange={(e) =>
                   setPreviewMode(e.target.value as "html" | "markdown" | "json")
                 }
-                className="text-xs bg-white border border-gray-300 rounded px-2 py-1"
+                className="text-xs bg-white border border-gray-300 rounded px-2 py-1 text-gray-700"
               >
-                {html?.trim() ||
-                  css?.trim() ||
-                  (js?.trim() && <option value="html">HTML</option>)}
+                {(html?.trim() || css?.trim() || js?.trim()) && (
+                  <option value="html">HTML</option>
+                )}
                 {markdown?.trim() && <option value="markdown">Markdown</option>}
                 {json?.trim() && <option value="json">JSON</option>}
               </select>

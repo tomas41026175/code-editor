@@ -2,6 +2,8 @@ import type { Tab, TabLanguageType } from "@component/Editor";
 import { generateUniqId } from "@utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+const STORAGE_KEY = "code-editor-tabs";
+
 const useTabs = ({
   onTabsChange,
   initialTabList = [],
@@ -12,11 +14,24 @@ const useTabs = ({
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTab, setActiveTab] = useState<string>("");
 
-  // 使用 useRef 來存儲 onTabsChange 函數，避免無限循環
   const onTabsChangeRef = useRef(onTabsChange);
   onTabsChangeRef.current = onTabsChange;
 
   useEffect(() => {
+    try {
+      const savedTabs = localStorage.getItem(STORAGE_KEY);
+      if (savedTabs) {
+        const parsedTabs = JSON.parse(savedTabs);
+        if (Array.isArray(parsedTabs) && parsedTabs.length > 0) {
+          setTabs(parsedTabs);
+          setActiveTab(parsedTabs[0].id);
+          return;
+        }
+      }
+    } catch (error) {
+      console.warn("無法載入已保存的標籤頁:", error);
+    }
+
     if (initialTabList.length > 0) {
       const newTabs = initialTabList.map((tab) => ({
         ...tab,
@@ -27,12 +42,26 @@ const useTabs = ({
     }
   }, []);
 
-  // 使用 useRef 來避免依賴項問題
-  useEffect(() => {
-    if (tabs.length > 0 || activeTab !== "") {
-      onTabsChangeRef.current(tabs, activeTab);
+  const saveTabsToStorage = useCallback((tabsToSave: Tab[]) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tabsToSave));
+    } catch (error) {
+      console.warn("無法保存標籤頁到 localStorage:", error);
     }
-  }, [tabs, activeTab]);
+  }, []);
+
+  useEffect(() => {
+    // 總是調用 onTabsChange，即使沒有分頁
+    onTabsChangeRef.current(tabs, activeTab);
+
+    // 只有在有分頁時才保存到 localStorage
+    if (tabs.length > 0) {
+      saveTabsToStorage(tabs);
+    } else {
+      // 如果沒有分頁，清除 localStorage
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [tabs, activeTab, saveTabsToStorage]);
 
   const addTab = useCallback((tab: Omit<Tab, "id">) => {
     const newTab = {
@@ -47,12 +76,11 @@ const useTabs = ({
     (tabId: string) => {
       setTabs((prev) => {
         const newTabs = prev.filter((tab) => tab.id !== tabId);
-        // 如果刪除的是當前活動標籤頁，則切換到第一個可用的標籤頁
         if (activeTab === tabId) {
           if (newTabs.length > 0) {
             setActiveTab(newTabs[0].id);
           } else {
-            setActiveTab(""); // 沒有標籤頁時清空活動標籤頁
+            setActiveTab("");
           }
         }
         return newTabs;
@@ -82,6 +110,51 @@ const useTabs = ({
     );
   }, []);
 
+  const clearAllTabs = useCallback(() => {
+    setTabs([]);
+    setActiveTab("");
+    localStorage.removeItem(STORAGE_KEY);
+  }, []);
+
+  const exportTabs = useCallback(() => {
+    try {
+      const dataStr = JSON.stringify(tabs, null, 2);
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `code-editor-tabs-${
+        new Date().toISOString().split("T")[0]
+      }.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("匯出標籤頁失敗:", error);
+    }
+  }, [tabs]);
+
+  const importTabs = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const importedTabs = JSON.parse(content);
+        if (Array.isArray(importedTabs)) {
+          const newTabs = importedTabs.map((tab) => ({
+            ...tab,
+            id: generateUniqId(),
+          }));
+          setTabs(newTabs);
+          setActiveTab(newTabs[0]?.id || "");
+        }
+      } catch (error) {
+        console.error("匯入標籤頁失敗:", error);
+        alert("匯入失敗：檔案格式不正確");
+      }
+    };
+    reader.readAsText(file);
+  }, []);
+
   return {
     tabs,
     activeTab,
@@ -91,6 +164,9 @@ const useTabs = ({
     updateTabContent,
     updateTabLanguage,
     updateTabName,
+    clearAllTabs,
+    exportTabs,
+    importTabs,
   };
 };
 
